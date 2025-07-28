@@ -1,6 +1,6 @@
 # Description
 
-This repository is meant to serve as a general template for how to set up new repositories in the JogetOSS organization. 
+This plugin is used to debug the Cache statistics of a Joget instance. 
 
 # Getting Help
 
