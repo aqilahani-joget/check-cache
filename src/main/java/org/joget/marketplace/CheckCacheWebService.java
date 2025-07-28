@@ -8,8 +8,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
+import java.util.Arrays;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Statistics;
 
 public class CheckCacheWebService extends ExtDefaultPlugin implements PluginWebSupport {
 
@@ -43,5 +48,21 @@ public class CheckCacheWebService extends ExtDefaultPlugin implements PluginWebS
 
     public void performTask() {
         LogUtil.info(CheckCacheWebService.class.getName(), "Cache Statistics: " + cache.getStatistics().toString());
+        Statistics stats = cache.getStatistics();
+        LogUtil.info(CheckCacheWebService.class.getName(), "Ehcache stats: Hits=" + stats.getCacheHits()
+            + ", Misses=" + stats.getCacheMisses()
+            + ", Size=" + cache.getSize()
+            + ", InMemorySize=" + cache.getMemoryStoreSize()
+            + ", Evicted=" + stats.getEvictionCount()
+            );
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        ThreadInfo[] infos = bean.dumpAllThreads(true, true);
+
+        long countBlocked = Arrays.stream(infos)
+            .filter(info -> info.getLockName() != null && info.getLockName().contains("profileCache"))
+            .count();
+
+        LogUtil.info(CheckCacheWebService.class.getName(), "Threads blocked on cache: " + countBlocked);
+
     }
 }
