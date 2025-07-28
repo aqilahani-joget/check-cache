@@ -30,7 +30,7 @@ public class Activator implements BundleActivator {
         };
         scheduler = Executors.newScheduledThreadPool(1);
         //change 5 minutes to another value
-        scheduler.scheduleAtFixedRate(minuteTask, 0, 5, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(minuteTask, 0, 60, TimeUnit.MINUTES);
     }
 
     public void stop(BundleContext context) {
