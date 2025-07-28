@@ -18,14 +18,6 @@ import net.sf.ehcache.Statistics;
 
 public class CheckCacheWebService extends ExtDefaultPlugin implements PluginWebSupport {
 
-    private static final CacheManager cacheManager;
-    private static final Cache cache;
-    
-    static {
-        cacheManager = CacheManager.create();
-        cache = cacheManager.getCache("org.joget.cache.DATASOURCE_CACHE");
-    }
-
     @Override
     public String getName() {
         return "CheckCacheWebService";
@@ -47,19 +39,26 @@ public class CheckCacheWebService extends ExtDefaultPlugin implements PluginWebS
     }
 
     public void performTask() {
-        LogUtil.info(CheckCacheWebService.class.getName(), "Cache Statistics: " + cache.getStatistics().toString());
-        Statistics stats = cache.getStatistics();
-        LogUtil.info(CheckCacheWebService.class.getName(), "Ehcache stats: Hits=" + stats.getCacheHits()
-            + ", Misses=" + stats.getCacheMisses()
-            + ", Size=" + cache.getSize()
-            + ", InMemorySize=" + cache.getMemoryStoreSize()
-            + ", Evicted=" + stats.getEvictionCount()
+        CacheManager cacheManager = CacheManager.getInstance();
+        Cache cache = cacheManager.getCache("org.joget.cache.DATASOURCE_CACHE");
+
+        if (cache != null) {
+            LogUtil.info(CheckCacheWebService.class.getName(), "Cache Statistics: " + cache.getStatistics().toString());
+            Statistics stats = cache.getStatistics();
+            LogUtil.info(CheckCacheWebService.class.getName(), "Ehcache stats: Hits=" + stats.getCacheHits()
+                + ", Misses=" + stats.getCacheMisses()
+                + ", Size=" + cache.getSize()
+                + ", InMemorySize=" + cache.getMemoryStoreSize()
+                + ", Evicted=" + stats.getEvictionCount()
             );
+        } else {
+            LogUtil.warn(CheckCacheWebService.class.getName(), "Cache 'org.joget.cache.DATASOURCE_CACHE' not found.");
+        }
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
         ThreadInfo[] infos = bean.dumpAllThreads(true, true);
 
         long countBlocked = Arrays.stream(infos)
-            .filter(info -> info.getLockName() != null && info.getLockName().contains("profileCache"))
+            .filter(info -> info.getLockName() != null && info.getLockName().contains("ReadWriteLock"))
             .count();
 
         LogUtil.info(CheckCacheWebService.class.getName(), "Threads blocked on cache: " + countBlocked);
